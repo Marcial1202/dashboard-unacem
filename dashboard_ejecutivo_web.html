@@ -1,340 +1,234 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNACEM PERÚ - Dashboard Ejecutivo</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React y ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel para compilar JSX en el navegador -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-    <!-- Recharts -->
-    <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
-
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <style>
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
-        /* Clases de utilidad personalizadas para imitar la versión original */
-        .min-h-screen { min-height: 100vh; }
-        .recharts-wrapper { font-family: inherit; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Ejecutivo - UNACEM</title>
+  
+  <!-- Carga de Tailwind CSS, React y Recharts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
+  <script src="https://unpkg.com/recharts/umd/Recharts.js"></script>
 </head>
-<body class="bg-[#f8f9fa]">
-    <!-- Contenedor donde se montará la app de React -->
-    <div id="root"></div>
+<body class="bg-[#f8f9fa] font-sans text-gray-900">
+  <div id="root"></div>
 
-    <!-- Script de React usando Babel -->
-    <script type="text/babel">
-        // Extraer componentes de Recharts desde el objeto global
-        const { 
-            BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip: RechartsTooltip, ResponsiveContainer, 
-            PieChart, Pie, Cell, Legend, LabelList 
-        } = window.Recharts;
-        const { useState, useEffect } = React;
+  <script type="text/babel">
+    const { useState } = React;
+    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend, LabelList } = window.Recharts;
 
-        // --- ICONOS INLINE SVG (Reemplazo de lucide-react para HTML standalone) ---
-        const IconActivity = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>
+    // --- DATOS ---
+    const coreData = [
+      { module: 'PP', scenario: 'ORDENES DE PROCESO-CONDORCOCHA', advance: 100 },
+      { module: 'PP', scenario: 'ORDENES DE PROCESO-ATOCONGO', advance: 0 },
+      { module: 'SD', scenario: 'NOTAS DE CREDITO / DEBITO - SERVICIOS', advance: 70 },
+      { module: 'SD', scenario: 'PEDIDOS VENTAS CEMENTO (CREA, FACT, DESP)', advance: 57 },
+      { module: 'SD', scenario: 'NOTAS DE CREDITO POR VALOR - CEMENTO', advance: 52 },
+      { module: 'SD', scenario: 'NOTAS DE CREDITO POR SALDO - CEMENTO', advance: 52 },
+      { module: 'SD', scenario: 'PEDIDOS VENTAS SERVICIOS (CREA Y FACT)', advance: 51 },
+      { module: 'SD', scenario: 'NOTAS DE DEBITO - CEMENTO', advance: 29 },
+    ];
+
+    const allData = [
+      { module: 'FI', scenario: 'CIERRE DE COSTOS CEMENTO -CONCRETO Y PDC', advance: 50 },
+      { module: 'FI', scenario: 'CIERRE MENSUAL', advance: 0 },
+      { module: 'MM', scenario: 'PEDIDO DE COMPRAS LOCAL STOCK', advance: 91 },
+      { module: 'MM', scenario: 'PEDIDO DE COMPRAS MATERIAS PRIMAS', advance: 90 },
+      { module: 'MM', scenario: 'PEDIDO DE COMPRAS LOCAL NON-STOCK', advance: 89 },
+      { module: 'MM', scenario: 'LIQUIDACION GASTOS TRANSPORTE MP', advance: 85 },
+      { module: 'MM', scenario: 'PEDIDO DE COMPRAS IMPORTACION', advance: 79 },
+      { module: 'MM', scenario: 'INVENTARIOS', advance: 78 },
+      { module: 'MM', scenario: 'PEDIDO DE COMPRAS CONSIGNACIÓN', advance: 70 },
+    ];
+
+    const moduleAverages = [
+      { name: 'PP (Core)', value: 50 },
+      { name: 'SD (Core)', value: 52 },
+      { name: 'FI', value: 25 },
+      { name: 'MM', value: 83 },
+    ];
+
+    const COLORS = ['#000000', '#dc2626', '#1a1a1a', '#ef4444'];
+
+    // --- ICONOS SVG (Reemplazo para funcionar sin dependencias extra) ---
+    const Icons = {
+      Activity: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>,
+      Target: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+      Layers: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
+      BarChart3: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+    };
+
+    const KpiCard = ({ title, value, subtitle, iconName, colorClass }) => {
+      const Icon = Icons[iconName];
+      return (
+        <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-start justify-between relative overflow-hidden group`}>
+          <div className={`absolute top-0 left-0 w-1 h-full ${colorClass}`}></div>
+          <div>
+            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">{title}</p>
+            <h3 className="text-4xl font-black text-black">{value}%</h3>
+            <p className="text-xs text-gray-400 mt-2 font-medium">{subtitle}</p>
+          </div>
+          <div className={`p-3 rounded-lg ${colorClass.replace('bg-', 'bg-opacity-10 text-').replace('border-', 'text-')}`}>
+            <Icon />
+          </div>
+        </div>
+      );
+    };
+
+    const CustomTooltip = ({ active, payload, label }) => {
+      if (active && payload && payload.length) {
+        return (
+          <div className="bg-black text-white p-3 rounded shadow-xl border border-gray-800 text-sm z-50 relative">
+            <p className="font-bold mb-1 border-b border-gray-700 pb-1">{label}</p>
+            <p className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-red-500"></span>
+              Avance: <span className="font-bold">{payload[0].value}%</span>
+            </p>
+          </div>
         );
-        const IconTarget = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-        );
-        const IconLayers = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 12 12 17 22 12"/><polyline points="2 17 12 22 22 17"/></svg>
-        );
-        const IconBarChart3 = ({ size = 24, className = "" }) => (
-            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-        );
+      }
+      return null;
+    };
 
-        // --- DATOS EXTRAÍDOS DEL EXCEL ---
-        const coreData = [
-            { module: 'PP', scenario: 'ORDENES DE PROCESO-CONDORCOCHA', advance: 100 },
-            { module: 'PP', scenario: 'ORDENES DE PROCESO-ATOCONGO', advance: 0 },
-            { module: 'SD', scenario: 'NOTAS DE CREDITO / DEBITO - SERVICIOS', advance: 70 },
-            { module: 'SD', scenario: 'PEDIDOS VENTAS CEMENTO (CREA, FACT, DESP)', advance: 57 },
-            { module: 'SD', scenario: 'NOTAS DE CREDITO POR VALOR - CEMENTO', advance: 52 },
-            { module: 'SD', scenario: 'NOTAS DE CREDITO POR SALDO - CEMENTO', advance: 52 },
-            { module: 'SD', scenario: 'PEDIDOS VENTAS SERVICIOS (CREA Y FACT)', advance: 51 },
-            { module: 'SD', scenario: 'NOTAS DE DEBITO - CEMENTO', advance: 29 },
-        ];
+    function App() {
+      const [activeTab, setActiveTab] = useState('core');
+      
+      const currentData = activeTab === 'core' ? coreData : allData;
+      const generalAvg = activeTab === 'core' ? 51 : 57;
 
-        const allData = [
-            { module: 'FI', scenario: 'CIERRE DE COSTOS CEMENTO -CONCRETO Y PDC', advance: 50 },
-            { module: 'FI', scenario: 'CIERRE MENSUAL', advance: 0 },
-            { module: 'MM', scenario: 'PEDIDO DE COMPRAS LOCAL STOCK', advance: 91 },
-            { module: 'MM', scenario: 'PEDIDO DE COMPRAS MATERIAS PRIMAS', advance: 90 },
-            { module: 'MM', scenario: 'PEDIDO DE COMPRAS LOCAL NON-STOCK', advance: 89 },
-            { module: 'MM', scenario: 'LIQUIDACION GASTOS TRANSPORTE MP', advance: 85 },
-            { module: 'MM', scenario: 'PEDIDO DE COMPRAS IMPORTACION', advance: 79 },
-            { module: 'MM', scenario: 'INVENTARIOS', advance: 78 },
-            { module: 'MM', scenario: 'PEDIDO DE COMPRAS CONSIGNACIÓN', advance: 70 },
-        ];
-
-        const moduleAverages = [
-            { name: 'PP (Core)', value: 50 },
-            { name: 'SD (Core)', value: 52 },
-            { name: 'FI', value: 25 },
-            { name: 'MM', value: 83 },
-        ];
-
-        const COLORS = ['#000000', '#dc2626', '#1a1a1a', '#ef4444'];
-
-        // --- COMPONENTES AUXILIARES ---
-        const KpiCard = ({ title, value, subtitle, icon: Icon, colorClass }) => (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-start justify-between relative overflow-hidden group">
-                <div className={`absolute top-0 left-0 w-1 h-full ${colorClass}`}></div>
+      return (
+        <div className="pb-12">
+          <header className="bg-black text-white px-8 py-6 shadow-md border-b-4 border-red-600">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-red-600 p-2 rounded text-white">
+                  <Icons.Activity />
+                </div>
                 <div>
-                <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1">{title}</p>
-                <h3 className="text-4xl font-black text-black">{value}%</h3>
-                <p className="text-xs text-gray-400 mt-2 font-medium">{subtitle}</p>
+                  <h1 className="text-2xl font-black tracking-tight">UNACEM PERÚ</h1>
+                  <p className="text-red-400 text-xs font-bold uppercase tracking-widest">Dashboard de Avance Ejecutivo</p>
                 </div>
-                <div className={`p-3 rounded-lg ${colorClass.includes('red') ? 'bg-red-50 text-red-600' : colorClass.includes('green') ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-black'}`}>
-                <Icon size={24} className="text-current" />
-                </div>
+              </div>
             </div>
-        );
+          </header>
 
-        const CustomTooltip = ({ active, payload, label }) => {
-            if (active && payload && payload.length) {
-                return (
-                <div className="bg-black text-white p-3 rounded shadow-xl border border-gray-800 text-sm z-50 relative">
-                    <p className="font-bold mb-1 border-b border-gray-700 pb-1">{label}</p>
-                    <p className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                    Avance: <span className="font-bold">{payload[0].value}%</span>
-                    </p>
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+            <div className="flex gap-4 mb-8 border-b border-gray-300">
+              <button
+                onClick={() => setActiveTab('core')}
+                className={`pb-3 px-4 font-bold text-sm uppercase tracking-wide transition-colors ${activeTab === 'core' ? 'text-red-600 border-b-4 border-red-600' : 'text-gray-400 hover:text-black'}`}
+              >
+                Procesos Core
+              </button>
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`pb-3 px-4 font-bold text-sm uppercase tracking-wide transition-colors ${activeTab === 'all' ? 'text-red-600 border-b-4 border-red-600' : 'text-gray-400 hover:text-black'}`}
+              >
+                Todos los Procesos (FI & MM)
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <KpiCard title="Promedio General" value={generalAvg} subtitle={`Media total de procesos ${activeTab === 'core' ? 'Core' : 'FI/MM'}`} iconName="Target" colorClass="bg-red-600 border-red-600" />
+              {activeTab === 'core' ? (
+                <React.Fragment>
+                  <KpiCard title="Avance PP" value={50} subtitle="Promedio Módulo PP" iconName="Layers" colorClass="bg-black border-black" />
+                  <KpiCard title="Avance SD" value={52} subtitle="Promedio Módulo SD" iconName="BarChart3" colorClass="bg-black border-black" />
+                  <KpiCard title="Procesos al 100%" value={1} subtitle="Escenarios completados" iconName="Activity" colorClass="bg-green-600 border-green-600" />
+                </React.Fragment>
+              ) : (
+                <React.Fragment>
+                  <KpiCard title="Avance FI" value={25} subtitle="Promedio Módulo FI" iconName="Layers" colorClass="bg-black border-black" />
+                  <KpiCard title="Avance MM" value={83} subtitle="Promedio Módulo MM" iconName="BarChart3" colorClass="bg-black border-black" />
+                  <KpiCard title="Procesos > 80%" value={4} subtitle="Escenarios avanzados" iconName="Activity" colorClass="bg-green-600 border-green-600" />
+                </React.Fragment>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-3 h-8 bg-red-600 rounded-sm"></div>
+                  <h2 className="text-xl font-black text-black">Desempeño por Escenario</h2>
                 </div>
-                );
-            }
-            return null;
-        };
-
-        // --- COMPONENTE PRINCIPAL ---
-        function App() {
-            const [activeTab, setActiveTab] = useState('core');
-            const [isMounted, setIsMounted] = useState(false);
-
-            // Asegurar que el componente se renderiza solo del lado del cliente
-            useEffect(() => {
-                setIsMounted(true);
-            }, []);
-            
-            const currentData = activeTab === 'core' ? coreData : allData;
-            const generalAvg = activeTab === 'core' ? 51 : 57;
-
-            if (!isMounted) return null;
-
-            return (
-                <div className="min-h-screen font-sans text-gray-900 pb-12">
-                
-                {/* HEADER EXECUTIVO */}
-                <header className="bg-black text-white px-8 py-6 shadow-md border-b-4 border-red-600">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="bg-red-600 p-2 rounded">
-                        <IconActivity size={28} className="text-white" />
-                        </div>
-                        <div>
-                        <h1 className="text-2xl font-black tracking-tight">UNACEM PERÚ</h1>
-                        <p className="text-red-400 text-xs font-bold uppercase tracking-widest">Dashboard de Avance Ejecutivo</p>
-                        </div>
-                    </div>
-                    <div className="text-right hidden md:block">
-                        <p className="text-sm text-gray-400">Última actualización</p>
-                        <p className="font-bold">Datos en Tiempo Real</p>
-                    </div>
-                    </div>
-                </header>
-
-                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-                    
-                    {}
-                    <div className="flex gap-4 mb-8 border-b border-gray-300">
-                    <button
-                        onClick={() => setActiveTab('core')}
-                        className={`pb-3 px-4 font-bold text-sm uppercase tracking-wide transition-colors ${
-                        activeTab === 'core' 
-                            ? 'text-red-600 border-b-4 border-red-600' 
-                            : 'text-gray-400 hover:text-black'
-                        }`}
-                    >
-                        Procesos Core
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('all')}
-                        className={`pb-3 px-4 font-bold text-sm uppercase tracking-wide transition-colors ${
-                        activeTab === 'all' 
-                            ? 'text-red-600 border-b-4 border-red-600' 
-                            : 'text-gray-400 hover:text-black'
-                        }`}
-                    >
-                        Todos los Procesos (FI & MM)
-                    </button>
-                    </div>
-
-                    {}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <KpiCard 
-                        title="Promedio General" 
-                        value={generalAvg} 
-                        subtitle={`Media total de procesos ${activeTab === 'core' ? 'Core' : 'FI/MM'}`}
-                        icon={IconTarget} 
-                        colorClass="bg-red-600 border-red-600"
-                    />
-                    {activeTab === 'core' ? (
-                        <>
-                        <KpiCard title="Avance PP" value={50} subtitle="Promedio Módulo PP" icon={IconLayers} colorClass="bg-black border-black" />
-                        <KpiCard title="Avance SD" value={52} subtitle="Promedio Módulo SD" icon={IconBarChart3} colorClass="bg-black border-black" />
-                        <KpiCard title="Procesos al 100%" value={1} subtitle="Escenarios completados" icon={IconActivity} colorClass="bg-green-600 border-green-600" />
-                        </>
-                    ) : (
-                        <>
-                        <KpiCard title="Avance FI" value={25} subtitle="Promedio Módulo FI" icon={IconLayers} colorClass="bg-black border-black" />
-                        <KpiCard title="Avance MM" value={83} subtitle="Promedio Módulo MM" icon={IconBarChart3} colorClass="bg-black border-black" />
-                        <KpiCard title="Procesos > 80%" value={4} subtitle="Escenarios avanzados" icon={IconActivity} colorClass="bg-green-600 border-green-600" />
-                        </>
-                    )}
-                    </div>
-
-                    {}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    
-                    {/* GRÁFICO DE BARRAS */}
-                    <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <div className="flex items-center gap-2 mb-6">
-                        <div className="w-3 h-8 bg-red-600 rounded-sm"></div>
-                        <h2 className="text-xl font-black text-black">Desempeño por Escenario</h2>
-                        </div>
-                        <div className="h-[400px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                            data={currentData}
-                            layout="vertical"
-                            margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
-                            >
-                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
-                            <XAxis type="number" domain={[0, 100]} tick={{ fill: '#6b7280' }} />
-                            <YAxis 
-                                dataKey="scenario" 
-                                type="category" 
-                                width={220} 
-                                tick={{ fontSize: 10, fill: '#1a1a1a', fontWeight: 600 }} 
-                            />
-                            <RechartsTooltip content={<CustomTooltip />} cursor={{ fill: '#f3f4f6' }} />
-                            <Bar 
-                                dataKey="advance" 
-                                fill="#dc2626" 
-                                radius={[0, 4, 4, 0]} 
-                                barSize={20}
-                            >
-                                <LabelList dataKey="advance" position="right" formatter={(val) => `${val}%`} style={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} />
-                            </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                        </div>
-                    </div>
-
-                    {/* GRÁFICO DE DONA */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
-                        <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-8 bg-black rounded-sm"></div>
-                        <h2 className="text-xl font-black text-black">Promedio por Módulo</h2>
-                        </div>
-                        <p className="text-sm text-gray-500 mb-6">Vista general del progreso consolidado</p>
-                        
-                        <div className="flex-1 min-h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                            <Pie
-                                data={moduleAverages}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={70}
-                                outerRadius={100}
-                                paddingAngle={5}
-                                dataKey="value"
-                                stroke="none"
-                            >
-                                {moduleAverages.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <RechartsTooltip 
-                                formatter={(value) => [`${value}%`, 'Avance Promedio']}
-                                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                            />
-                            <Legend 
-                                verticalAlign="bottom" 
-                                height={36} 
-                                iconType="circle"
-                                formatter={(value) => <span className="text-black font-bold text-xs">{value}</span>}
-                            />
-                            </PieChart>
-                        </ResponsiveContainer>
-                        </div>
-                    </div>
-                    </div>
-
-                    {}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-black text-white">
-                        <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-bold">Detalle de Escenarios ({activeTab === 'core' ? 'Core' : 'Todos'})</h2>
-                        </div>
-                    </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-50 border-b border-gray-200">
-                            <tr>
-                            <th className="px-6 py-4 font-bold text-gray-900">Módulo</th>
-                            <th className="px-6 py-4 font-bold text-gray-900">Escenario</th>
-                            <th className="px-6 py-4 font-bold text-gray-900 text-right">Avance</th>
-                            <th className="px-6 py-4 font-bold text-gray-900">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {currentData.map((item, index) => (
-                            <tr key={index} className="hover:bg-red-50 transition-colors group">
-                                <td className="px-6 py-4 font-bold text-black">
-                                <span className="bg-gray-100 px-2 py-1 rounded text-xs">{item.module}</span>
-                                </td>
-                                <td className="px-6 py-4 font-medium text-gray-700 group-hover:text-black">
-                                {item.scenario}
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                <span className="font-black text-black">{item.advance}%</span>
-                                </td>
-                                <td className="px-6 py-4">
-                                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div 
-                                    className={`h-2.5 rounded-full ${item.advance === 100 ? 'bg-green-500' : item.advance > 50 ? 'bg-black' : 'bg-red-600'}`} 
-                                    style={{ width: `${item.advance}%` }}
-                                    ></div>
-                                </div>
-                                </td>
-                            </tr>
-                            ))}
-                        </tbody>
-                        </table>
-                    </div>
-                    </div>
-
-                </main>
+                <div className="h-[400px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={currentData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+                      <XAxis type="number" domain={[0, 100]} tick={{ fill: '#6b7280' }} />
+                      <YAxis dataKey="scenario" type="category" width={220} tick={{ fontSize: 10, fill: '#1a1a1a', fontWeight: 600 }} />
+                      <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f3f4f6' }} />
+                      <Bar dataKey="advance" fill="#dc2626" radius={[0, 4, 4, 0]} barSize={20}>
+                        <LabelList dataKey="advance" position="right" formatter={(val) => `${val}%`} style={{ fill: '#000', fontSize: 12, fontWeight: 'bold' }} />
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-            );
-        }
+              </div>
 
-        // --- RENDERIZADO EN EL DOM ---
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-8 bg-black rounded-sm"></div>
+                  <h2 className="text-xl font-black text-black">Promedio por Módulo</h2>
+                </div>
+                <p className="text-sm text-gray-500 mb-6">Vista general del progreso consolidado</p>
+                <div className="flex-1 min-h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={moduleAverages} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">
+                        {moduleAverages.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${value}%`, 'Avance Promedio']} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+                      <Legend verticalAlign="bottom" height={36} iconType="circle" formatter={(value) => <span className="text-black font-bold text-xs">{value}</span>} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-black text-white">
+                <h2 className="text-lg font-bold">Detalle de Escenarios ({activeTab === 'core' ? 'Core' : 'Todos'})</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 font-bold text-gray-900">Módulo</th>
+                      <th className="px-6 py-4 font-bold text-gray-900">Escenario</th>
+                      <th className="px-6 py-4 font-bold text-gray-900 text-right">Avance</th>
+                      <th className="px-6 py-4 font-bold text-gray-900">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {currentData.map((item, index) => (
+                      <tr key={index} className="hover:bg-red-50 transition-colors group">
+                        <td className="px-6 py-4 font-bold text-black"><span className="bg-gray-100 px-2 py-1 rounded text-xs">{item.module}</span></td>
+                        <td className="px-6 py-4 font-medium text-gray-700 group-hover:text-black">{item.scenario}</td>
+                        <td className="px-6 py-4 text-right"><span className="font-black text-black">{item.advance}%</span></td>
+                        <td className="px-6 py-4">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div className={`h-2.5 rounded-full ${item.advance === 100 ? 'bg-green-500' : item.advance > 50 ? 'bg-black' : 'bg-red-600'}`} style={{ width: `${item.advance}%` }}></div>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
